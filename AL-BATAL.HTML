@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>مغسلة البطل</title>
+    <style>
+        :root { --main: #0056b3; --accent: #28a745; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f7f6; padding: 15px; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        h2 { color: var(--main); text-align: center; }
+        .sec-head { background: var(--main); color: white; padding: 10px; margin: 25px 0 15px; border-radius: 5px; text-align: center; font-weight: bold; }
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+        .prod-card { border: 1px solid #ddd; padding: 10px; border-radius: 8px; text-align: center; background: #fff; }
+        .prod-name { font-weight: bold; margin-bottom: 5px; font-size: 0.9em; min-height: 2.4em; }
+        .controls { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 5px; }
+        .btn { background: var(--accent); color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; cursor: pointer; font-weight: bold; margin-top: 20px; }
+        select, input { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ccc; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="app">
+    <div id="step1">
+        <h2>مغسلة البطل</h2>
+        <label>اختر الفرع:</label>
+        <select id="branch"><option value="01220329739">سانت تريزا</option><option value="01222163821">الخلفاوي</option></select>
+        <button class="btn" onclick="showMenu()">ابدأ الطلب</button>
+    </div>
+
+    <div id="step2" style="display:none;">
+        <h2>قائمة الخدمات</h2>
+        <div id="menu-content"></div>
+        <button class="btn" onclick="showCheckout()">تأكيد الطلب</button>
+    </div>
+
+    <div id="step3" style="display:none;">
+        <h2>بيانات العميل</h2>
+        <input type="text" id="cName" placeholder="الاسم الكريم">
+        <input type="text" id="cPhone" placeholder="رقم التليفون">
+        <input type="text" id="cAddr" placeholder="العنوان">
+        <button class="btn" onclick="sendOrder()">إرسال الطلب للواتساب</button>
+    </div>
+</div>
+
+<script>
+    const menu = {
+        "قسم الكوي": [
+            {n:"قميص", p:7}, {n:"بنطلون", p:7}, {n:"تيشيرت", p:7}, {n:"بلوزة", p:9}, {n:"شيميز", p:15}, 
+            {n:"فستان سواريه", p:[20,50]}, {n:"بدلة صيفي", p:25}, {n:"بدلة كاملة", p:40}, {n:"جلابية", p:20}, 
+            {n:"جاكيت", p:20}, {n:"سلوبت", p:25}, {n:"فستان اطفالي", p:20}, {n:"بدلة اطفالي", p:20}, {n:"فستان فرح", p:[150,200]}
+        ],
+        "قسم التنظيف": [
+            {n:"قميص", p:25}, {n:"بنطلون", p:25}, {n:"تيشيرت", p:25}, {n:"بلوزة", p:30}, {n:"شيميز", p:40}, 
+            {n:"بدلة قطعتين", p:70}, {n:"بدلة تلت قطع", p:90}, {n:"بدلة كاملة", p:110}, {n:"فستان عادي", p:90}, 
+            {n:"فستان سواريه", p:[120,200]}, {n:"فستان فرح", p:650}
+        ],
+        "قسم الغسيل": [
+            {n:"سجاد (عادي)", p:25}, {n:"سجاد (شمواه)", p:30}, {n:"بطانية (عادية)", p:70}, 
+            {n:"بطانية (دبل)", p:90}, {n:"مفرش (عادي)", p:90}, {n:"مفرش (مبطن)", p:130}
+        ],
+        "قسم الصبغة": [
+            {n:"صبغة ملابس", p:80}, {n:"صبغة جاكيت", p:150}
+        ]
+    };
+
+    let cart = {};
+
+    function showMenu() {
+        document.getElementById('step1').style.display='none';
+        document.getElementById('step2').style.display='block';
+        let html = "";
+        for(let s in menu) {
+            html += `<div class="sec-head">${s}</div><div class="menu-grid">`;
+            menu[s].forEach((i, index) => {
+                let id = s.replace(/\s/g,'') + index;
+                let priceLabel = Array.isArray(i.p) ? 
+                    `<select id="p-${id}"><option value="${i.p[0]}">${i.p[0]} ج</option><option value="${i.p[1]}">${i.p[1]} ج</option></select>` : 
+                    `<div style="font-weight:bold">${i.p} ج</div><input type="hidden" id="p-${id}" value="${i.p}">`;
+                html += `<div class="prod-card"><div class="prod-name">${i.n}</div>${priceLabel}<div class="controls"><button onclick="mod('${id}',-1)">-</button><span id="q-${id}">0</span><button onclick="mod('${id}',1)">+</button></div></div>`;
+            });
+            html += `</div>`;
+        }
+        document.getElementById('menu-content').innerHTML = html;
+    }
+
+    function mod(id, v) {
+        if(!cart[id]) cart[id] = {q:0};
+        cart[id].q = Math.max(0, cart[id].q + v);
+        document.getElementById('q-'+id).innerText = cart[id].q;
+    }
+
+    function showCheckout() { document.getElementById('step2').style.display='none'; document.getElementById('step3').style.display='block'; }
+
+    function sendOrder() {
+        let b = document.getElementById('branch'), msg = `*طلب جديد من مغسلة البطل*%0A------------------%0A`;
+        for(let s in menu) {
+            let sItems = "";
+            menu[s].forEach((i, index) => {
+                let id = s.replace(/\s/g,'') + index;
+                if(cart[id] && cart[id].q > 0) sItems += `✅ ${i.n}: ${cart[id].q} × ${document.getElementById('p-'+id).value} ج%0A`;
+            });
+            if(sItems) msg += `*${s}:*%0A${sItems}`;
+        }
+        msg += `------------------%0A👤 الاسم: ${document.getElementById('cName').value}%0A📱 ت: ${document.getElementById('cPhone').value}%0A🏠 العنوان: ${document.getElementById('cAddr').value}`;
+        window.open(`https://wa.me/2${b.value}?text=${msg}`);
+    }
+</script>
+</body>
+</html>
